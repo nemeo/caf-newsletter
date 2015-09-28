@@ -1,5 +1,6 @@
 <?php
-class caf_registration_install
+//TODO création du répertoir uploads
+class caf_news_install
 {
 	public static function install()
 	{

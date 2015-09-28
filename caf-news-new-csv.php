@@ -6,27 +6,37 @@
 class caf_newsletter_new_csv
 {
 	private $foo = TRUE;
+	private $maxsize = 1048576;
+	private $csv_name = '';
+
 	public function new_html()
 	{
 	    	echo '<h1>'.get_admin_page_title().'</h1>';
 
 		if ($this->foo)
 		{
+		// avertissement quant au format du fichier
 		echo '<strong>Attention le CSV doit impérativement être composé de la manière suivante:</strong><br/><br/>
 			"email","nom","valide","newsletter","newsletter_ea"<br/>
 			"martine@la.plage","martine","1","1","0" ou s\'il manque des bouts<br/>
 			"martine@la.plage",,"1","1", et au pire <br/>
 			"martine@la.plage" là les valeurs par défaut seront appliquées!<br/><br/>';
-		echo '<form method="post" action="">';
-		echo '<input type="text" name="filename" value="lecteurs.csv"/>';
-		echo '<input type="text" name="separateur" value=","/>';
-		echo '<input type="hidden" name="save_registration" value="1"/>';
-	    	submit_button('Créer dans la base!');
+		// upload du fichier csv
+		$url = admin_url() . 'admin.php?page=caf_newsletter_new_csv';
+		echo '<form method="post" action="' . $url . '" enctype="multipart/form-data">
+			<label for="mon_csv">Fichier (*.csv | max. 1 Mo) :</label><br />
+			<input type="hidden" name="MAX_FILE_SIZE" value="' . $this->maxsize . '" />
+			<input type="file" name="mon_csv" id="mon_fichier"/><br />
+			<input type="hidden" name="send" value="1"/>
+			<label for="separateur">Séparateur</label><br />
+			<input type="text" name="separateur" value=","/>';
+	    		submit_button('Envoyer!');
 		echo '</form>';
-			echo '<form method="post" action="">';
-			echo '<input type="hidden" name="clean_users" value="1"/>';
-		    	submit_button('Vider dans la base!');
-			echo '</form>';
+		// flush de la base
+		echo '<form method="post" action="">';
+		echo '<input type="hidden" name="clean_users" value="1"/>';
+	    	submit_button('Vider la base des lecteurs!');
+		echo '</form>';
 		}
 		else
 		{
@@ -35,6 +45,36 @@ class caf_newsletter_new_csv
 		    	submit_button('T\'ES SURE!');
 			echo '</form>';
 		}
+		//
+	}
+	public function traite_csv()
+	{
+		if ($_FILES['mon_csv']['error'] > 0) $erreur = "Erreur lors du transfert";
+			else if ($_FILES['mon_csv']['size'] > $this->maxsize) $erreur = "Le fichier est trop gros";
+				else
+				{
+					$extensions_valides = array( 'csv' );
+					//1. strrchr renvoie l'extension avec le point (« . »).
+					//2. substr(chaine,1) ignore le premier caractère de chaine.
+					//3. strtolower met l'extension en minuscules.
+					$extension_upload = strtolower(  substr(  strrchr($_FILES['mon_csv']['name'], '.')  ,1)  );
+					if ( in_array($extension_upload,$extensions_valides) )
+					{
+						$this->csv_name = dirname( __FILE__ ) . '/uploads/' . $_FILES['mon_csv']['name'];
+						$resultat = move_uploaded_file($_FILES['mon_csv']['tmp_name'],$this->csv_name);
+						if ($resultat)
+						{
+							echo $_FILES['mon_csv']['name'] . ' transfert réussi<br/>';
+							$this->save();
+						}
+					}
+				}
+	}
+	public function delete_csv()
+	{
+		$resultat = unlink($this->csv_name);
+		if ($resultat) echo 'Fichier supprimé<br/>';
+		
 	}
 	public function save()
 	{
@@ -42,9 +82,9 @@ class caf_newsletter_new_csv
 		$ligne = 0; // compteur de ligne
 		$ligne_filled = 0; // compteur de ligne non vide
 		$ligne_exist = 0; // compteur de ligne existante
-		$filename = dirname( __FILE__ ) . '/'.$_POST['filename'];
+//		$filename = dirname( __FILE__ ) . '/'.$_POST['filename'];
 		$separator = $_POST['separateur'];
-		$fic = fopen($filename, "r"); // ouverture du fichier
+		$fic = fopen($this->csv_name, "r"); // ouverture du fichier
 		while($tab=fgetcsv($fic,1024,$separator))
 		{
 			$champs = count($tab);	//nombre de champ dans la ligne en question
@@ -92,7 +132,8 @@ class caf_newsletter_new_csv
 				$ligne_filled ++;
 			}
 		}
-		echo "<b> Les " . $ligne . " lecteurs ajouter dans la base et " . $ligne_exist . " déjà existants. le fichier contiens " . $ligne_filled . " coordonnées valides</b><br />";
+		echo "<b> Les " . $ligne . " lecteurs ajouter dans la base et " . $ligne_exist . " déjà existants.<br/> Le fichier contient " . $ligne_filled . " coordonnées valides</b><br />";
+		$this->delete_csv();
 	}
 	public function clean()
 	{
@@ -114,6 +155,10 @@ class caf_newsletter_new_csv
 		{
 			$this->clean();
 			$this->foo = TRUE;
+		}
+		if (isset($_POST['send']))
+		{
+			$this->traite_csv();
 		}
 	}
 	public function __construct()
