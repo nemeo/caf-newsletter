@@ -2,8 +2,8 @@
 /*
 Plugin Name: caf-news
 Plugin URI: http://cafsaintjulien.net
-Description: Un plugin d'inscription aux sorties proposées sur le site avec my calendar.
-Version: 0.1
+Description: Un plugin d'envoie de newsletter automatisée
+Version: 1.1.0
 Author: lagrossemiche
 Author URI: http://www.lagrossemiche.fr
 License: GPL2
@@ -24,13 +24,13 @@ include( dirname( __FILE__ ) . '/caf-news-newsletter.php' );
 require_once ( dirname( __FILE__ ) . '/caf-news-object.php' );
 
 global $cafnews_version, $wpdb;
-$cafnews_version = '0.1.02';
+$cafnews_version = '1.1.0';
 
 // TODO calendrier pour le choix des dates
 
 class caf_newsletter extends caf_newsletter_object
 {
-	private $foo = FALSE;
+	private $foo = TRUE;
 	public function add_admin_menu()
 	{
 		$hook = add_menu_page('La Newsletter du CAF', 'CAF_NewsLetter', 'manage_options', 'caf_newsletter', array($this, 'menu_html'));
@@ -41,14 +41,28 @@ class caf_newsletter extends caf_newsletter_object
 	}
 	public function process_action()
 	{
-		if (isset($_POST['send_newsletter'])) 
+		// the buttons to validate / cancel the flush of the users db apear
+		if (isset($_POST['purge_validate'])) 
 		{
-			$this->do_this();
+			$this->foo = FALSE;
 	    	}
+		// the action is canceled by the clever user
+		if (isset($_POST['purge_cancel'])) 
+		{
+			$this->foo = TRUE;
+	    	}
+		// they are all stupid, no longer need them anymore 
+		if (isset($_POST['purge_table'])) 
+		{
+			$this->purge_table();
+			$this->foo = TRUE;
+	    	}
+		// set the automatic send
 		if (isset($_POST['automatic_send_newsletter'])) 
 		{
 			$this->automatic_send_activation();
 	    	}
+		// reset the automatic send
 		if (isset($_POST['no_send_newsletter'])) 
 		{
 			$this->automatic_send_deactivation();
@@ -78,10 +92,27 @@ class caf_newsletter extends caf_newsletter_object
 			echo date("d-m-Y H:i:s",wp_next_scheduled('caf_automatic_send'));
 		}
 		$this->list_html();
-		echo '<form method="post" action="">';
-		echo '<input type="hidden" name="send_newsletter" value="1"/>';
-		submit_button('Envoyer manuellement la newsletter maintenant');
-		echo '</form>';
+		if  ($this->foo)
+		{
+			echo '<form method="post" action="">';
+			echo '<input type="hidden" name="purge_validate" value="1"/>';
+			submit_button('Vider la table maintenant');
+			echo '</form>';
+		}
+		else
+		{
+			echo '<table><tr><td>';
+			echo '<form method="post" action="">';
+			echo '<input display="inline" type="hidden" name="purge_table" value="1"/>';
+		    	submit_button('Je suis un fou!');
+			echo '</form>';
+			echo '</td><td>';
+			echo '<form method="post" action="">';
+			echo '<input type="hidden" name="purge_cancel" value="1"/>';
+		    	submit_button('Euhh en fait non...');
+			echo '</form>';
+			echo '</td></tr></table>';
+		}
 	}
 
 	public function list_html()
@@ -94,19 +125,23 @@ class caf_newsletter extends caf_newsletter_object
 				<div class="inside">
 					<table>
 						<tr>
-							<th>email</th>
 							<th>nom</th>
+							<th>email</th>
 							<th>active</th>
 							<th>newsletter</th>
 							<th>newsletter_ea</th>
+							<th>newsletter_ee</th>
+							<th>tester</th>
 						</tr>
     						<?php foreach ($readers as $_reader) {?>
 						<tr>
-							<td><?php echo $_reader->email;?></th>
 							<td><?php echo $_reader->name;?></th>
+							<td><?php echo $_reader->email;?></th>
 							<td><input type="checkbox" onclick="return false"<?php if ($_reader->active=='1'){echo ' checked="checked';}?>"/></td>
 							<td><input type="checkbox" onclick="return false"<?php if ($_reader->newsletter=='1'){echo ' checked="checked';}?>"/></td>
 							<td><input type="checkbox" onclick="return false"<?php if ($_reader->newsletter_ea=='1'){echo ' checked="checked';}?>"/></td>
+							<td><input type="checkbox" onclick="return false"<?php if ($_reader->newsletter_ee=='1'){echo ' checked="checked';}?>"/></td>
+							<td><input type="checkbox" onclick="return false"<?php if ($_reader->tester=='1'){echo ' checked="checked';}?>"/></td>
 						</tr>
 						<?php }?>
 					</table>
@@ -114,6 +149,13 @@ class caf_newsletter extends caf_newsletter_object
 			</div>
 		<?php
 		}	
+	}
+	public function purge_table()
+	{
+		global $wpdb;
+		//$wpdb->query("DROP TABLE {$wpdb->prefix}caf_newsletter_users;");
+		$wpdb->query("DELETE FROM {$wpdb->prefix}caf_newsletter_users;");
+		$this->foo = FALSE;
 	}
 	// cron activation to send a letter each day
 	public function automatic_send_activation()
@@ -134,10 +176,10 @@ class caf_newsletter extends caf_newsletter_object
 	    // Check that the day is Monday
 	    if($dateTime->format('N') == 1)
 	    {
-		$this->send_newsletter('news@cafsaintjulien.net');
+		$this->send_news();
 	    }
 	    // tester email
-	    $this->send_newsletter('michel.heche@free.fr');
+	    $this->send_betatest();
 	}
 	public function __construct()
 	{
@@ -152,7 +194,7 @@ class caf_newsletter extends caf_newsletter_object
 		add_action('caf_automatic_send', array($this, 'do_this'));
 
 		// il faut aussi savoir s'en séparer ... mais comme c'est dangereux je l'ai commenté
-		//register_uninstall_hook(__FILE__, array('$manage', 'uninstall'));
+		register_uninstall_hook(__FILE__, array('$manage', 'uninstall'));
 
 		// le menu d'administration du plugin
 		add_action('admin_menu', array($this, 'add_admin_menu'),20);

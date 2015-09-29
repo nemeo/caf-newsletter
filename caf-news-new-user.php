@@ -16,6 +16,8 @@ class caf_newsletter_new_user
 		add_settings_field('active', 'Activé', array($this, 'active_html'), $this->page_settings(), $this->page_section());
 		add_settings_field('newsletter', 'Abonné à la lettre hebdomadaire', array($this, 'newsletter_html'), $this->page_settings(), $this->page_section());
 		add_settings_field('newsletter_ea', 'Abonné à la lettre de l\'EA', array($this, 'newsletter_ea_html'), $this->page_settings(), $this->page_section());
+		add_settings_field('newsletter_ee', 'Abonné à la lettre de l\'EE', array($this, 'newsletter_ee_html'), $this->page_settings(), $this->page_section());
+		add_settings_field('newsletter_tester', 'Beta tester', array($this, 'newsletter_tester_html'), $this->page_settings(), $this->page_section());
 
 		
 		echo '<form method="post" action="options.php">';
@@ -63,6 +65,16 @@ class caf_newsletter_new_user
 		<input type="checkbox" value="1" id="newsletter_ea" name="newsletter_ea" <?php if (get_option('newsletter_ea')=='1'){echo 'checked';}?>>
 	    <?php
 	}
+	public function newsletter_ee_html()
+	{?>
+		<input type="checkbox" value="1" id="newsletter_ee" name="newsletter_ee" <?php if (get_option('newsletter_ee')=='1'){echo 'checked';}?>>
+	    <?php
+	}
+	public function newsletter_tester_html()
+	{?>
+		<input type="checkbox" value="1" id="newsletter_tester" name="newsletter_tester" <?php if (get_option('newsletter_tester')=='1'){echo 'checked';}?>>
+	    <?php
+	}
 	public function register_settings()
 	{
 	    register_setting('caf_newsletter_new_user_settings', 'name');
@@ -70,6 +82,8 @@ class caf_newsletter_new_user
 	    register_setting('caf_newsletter_new_user_settings', 'active');
 	    register_setting('caf_newsletter_new_user_settings', 'newsletter');
 	    register_setting('caf_newsletter_new_user_settings', 'newsletter_ea');
+	    register_setting('caf_newsletter_new_user_settings', 'newsletter_ee');
+	    register_setting('caf_newsletter_new_user_settings', 'newsletter_tester');
 	    register_setting('caf_newsletter_new_user_settings', 'save');
 	}
 	private function clean_options()
@@ -79,6 +93,8 @@ class caf_newsletter_new_user
 		update_option( 'active', '1' );
 		update_option( 'newsletter', '1' );
 		update_option( 'newsletter_ea', '0' );
+		update_option( 'newsletter_ee', '0' );
+		update_option( 'newsletter_tester', '0' );
 		update_option( 'save', '' );
 	}
 	public function save()
@@ -92,7 +108,9 @@ class caf_newsletter_new_user
 						'email' => get_option('email', ''),
 						'active' => get_option('active', '0'),
 						'newsletter' => get_option('newsletter', '0'),
-						'newsletter_ea' => get_option('newsletter_ea', '0')));
+						'newsletter_ea' => get_option('newsletter_ea', '0'),
+						'newsletter_ee' => get_option('newsletter_ee', '0'),
+						'tester' => get_option('newsletter_tester', '0')));
 			echo popuplinks('done');
 			$this->clean_options();
 		}

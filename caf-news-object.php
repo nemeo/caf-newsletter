@@ -37,6 +37,41 @@ class caf_newsletter_object
 			echo 'template: ' . $this->template_name;
 		}
 	}
+	/*
+	 * getting the beta tester emails from the db
+	 * and send each ones the the newsletter directly from the plugin
+	 */
+	public function send_betatest()
+	{
+		global $wpdb;
+		$readers = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}caf_newsletter_users WHERE tester=TRUE");
+		if (!is_null($readers))
+		{
+			foreach ($readers as $_reader)
+			{
+				$this->send_newsletter($_reader->email);
+			}
+		}
+	}
+	/*
+	 * getting the newsletter emails from the db
+	 * and send each ones the the newsletter directly from the plugin
+	 */
+	public function send_news()
+	{
+		global $wpdb;
+		$readers = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}caf_newsletter_users WHERE newsletter=TRUE");
+		if (!is_null($readers))
+		{
+			foreach ($readers as $_reader)
+			{
+				$this->send_newsletter($_reader->email);
+			}
+		}
+	}
+	/*
+	 * hardcoded rendering
+	 */
 	public function view()
 	{
 		$this->content =  $this->getRenderedHTML($this->template_name);
@@ -60,7 +95,6 @@ class caf_newsletter_object
 	private function set_theme()
 	{
 		$this->template_name = dirname( __FILE__ ) . '/themes/CAFSJ/theme.php';
-//		$this->template_name = dirname( __FILE__ ) . '/themes/CAFStJu/simple.php';
 	}
 	public function __construct()
 	{

@@ -17,10 +17,11 @@ class caf_newsletter_new_csv
 		{
 		// avertissement quant au format du fichier
 		echo '<strong>Attention le CSV doit impérativement être composé de la manière suivante:</strong><br/><br/>
-			"email","nom","valide","newsletter","newsletter_ea"<br/>
-			"martine@la.plage","martine","1","1","0" ou s\'il manque des bouts<br/>
-			"martine@la.plage",,"1","1", et au pire <br/>
-			"martine@la.plage" là les valeurs par défaut seront appliquées!<br/><br/>';
+						"email","nom","valide","newsletter","newsletter_ea","newsletter_ee","tester"<br/>
+			par exemple		"martine@la.plage","martine","1","1","0","1","0"<br/>
+			pour les testeurs 	"martine@la.plage","martine","1","0","0","0","1" <br/>
+			s\'il manque des bouts	"martine@la.plage",,"1",,"1", <br/>
+			au pire			"martine@la.plage" là les valeurs par défaut seront appliquées!<br/><br/>';
 		// upload du fichier csv
 		$url = admin_url() . 'admin.php?page=caf_newsletter_new_csv';
 		echo '<form method="post" action="' . $url . '" enctype="multipart/form-data">
@@ -101,7 +102,9 @@ class caf_newsletter_new_csv
 								'name' => $tab[$i++],
 								'active' =>  $tab[$i++],
 								'newsletter' =>  $tab[$i++],
-								'newsletter_ea' =>  $tab[$i]));
+								'newsletter_ea' =>  $tab[$i],
+								'newsletter_ee' =>  '0',
+								'tester' =>  '0'));
 						$ligne ++;
 					}
 					else
@@ -121,7 +124,30 @@ class caf_newsletter_new_csv
 								'name' => '',
 								'active' => '1',
 								'newsletter' => '1',
-								'newsletter_ea' => '0'));
+								'newsletter_ea' => '0',
+								'newsletter_ee' =>  '0',
+								'tester' =>  '0'));
+						$ligne ++;
+					}
+					else
+					{
+						$ligne_exist ++;
+					}
+				}
+				if ($champs==7)
+				{
+					$i=0;
+					$row = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}caf_newsletter_users WHERE email = '$tab[$i]'");
+					if (is_null($row)) 
+					{
+						$wpdb->insert("{$wpdb->prefix}caf_newsletter_users", 
+							 array(	'email' =>  $tab[$i++],
+								'name' => $tab[$i++],
+								'active' =>  $tab[$i++],
+								'newsletter' =>  $tab[$i++],
+								'newsletter_ea' =>  $tab[$i++],
+								'newsletter_ee' =>  $tab[$i++],
+								'tester' =>  $tab[$i]));
 						$ligne ++;
 					}
 					else

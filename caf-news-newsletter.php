@@ -53,13 +53,12 @@ class caf_newsletter_newsletter extends caf_newsletter_object
 		}
 	 	if (isset($_POST['send']))
 		{
-			$this->send_newsletter('news@cafsaintjulien.net');
+			$this->send_news();
 			$this->foo = TRUE;
 		}
 	 	if (isset($_POST['send_test']))
 		{
-			$this->send_newsletter('michel.heche@free.fr');
-			$this->send_newsletter('lgmiche@gmail.com');
+			$this->send_betatest();
 			$this->foo = TRUE;
 		}
 	}
