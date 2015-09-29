@@ -1,25 +1,17 @@
 <?php
-global $newsletter; // Newsletter object
 global $post; // Current post managed by WordPress
 require_once (WP_PLUGIN_DIR . '/my-calendar/my-calendar.php');
 /*
- * Some variabled are prepared by Newsletter Plus and are available inside the theme,
- * for example the theme options used to build the email body as configured by blog
- * owner.
+ * v1.01
  *
- * $theme_options - is an associative array with theme options: every option starts
- * with "theme_" as required. See the theme-options.php file for details.
- * Inside that array there are the autmated email options as well, if needed.
- * A special value can be present in theme_options and is the "last_run" which indicates
- * when th automated email has been composed last time. Is should be used to find if
- * there are now posts or not.
- *
- * $is_test - if true it means we are composing an email for test purpose.
+ * This is a fully stable version that has been checked
+ * It is the the prod default newsletter automatic sending that has been selected
+ * 
  */
 
 $theme_name = 'CAFSJ';
 
-$theme_url = get_option('siteurl') . '/wp-content/plugins/caf-news/themes/' . $theme_name . '/';
+$theme_url = get_option('siteurl') . '/wp-content/plugins/caf-newsletter/themes/' . $theme_name . '/';
 
 // This array will be passed to WordPress to extract the posts
 $filters = array();
@@ -83,7 +75,7 @@ $posts = get_posts($filters);?>
                                 <?php
                                 foreach ($posts as $post) {
                                     setup_postdata($post);
-                                    //$image = nt_post_image(get_the_ID());
+                                    $image = nt_post_image(get_the_ID());
                                     ?>
 
 
@@ -101,7 +93,7 @@ $posts = get_posts($filters);?>
 
                                                 <td style="vertical-align:middle; width: 100px">
 
-                                                    <a target="_tab" href="<?php echo get_permalink(); ?>" target="_blank"><img src="<?php /*echo $image*/; ?>" alt="" width="100" border="0" height="100"></a>
+                                                    <a target="_tab" href="<?php echo get_permalink(); ?>" target="_blank"><img src="<?php echo $image; ?>" alt="" width="100" border="0" height="100"></a>
 
                                                     <p style="background:#2786c2;text-align:center;margin:10px 0 0 0;font-size:11px;line-height:14px;font-family:arial,sans-serif;padding:4px 2px;border-radius:4px"><a target="_tab" href="<?php echo get_permalink(); ?>" style="color:#fff;text-decoration:none" target="_blank"><strong><?php echo 'Lire'; ?></strong></a></p>
 
